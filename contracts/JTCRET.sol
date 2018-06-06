@@ -3,7 +3,7 @@ pragma solidity ^0.4.18;
 // ----------------------------------------------------------------------------
 // 'JTCRET' token contract
 //
-// Deployed to : 0x90D8bf4f1ed98F3Ee5699eE3a591721dEE2E4341
+// Deployed to : 0xd5b8f021bf529b6bb5eaba61d0fe59456255d88e
 // Symbol      : JTCRET
 // Name        : JTCRET
 // Total supply: 100000000
@@ -82,6 +82,13 @@ contract Owned {
 }
 
 
+// Borrowed from MiniMeToken
+// ----------------------------------------------------------------------------
+contract ApproveAndCallFallBack {
+    function receiveApproval(address from, uint256 tokens, address token, bytes data) public;
+}
+
+
 // ----------------------------------------------------------------------------
 // ERC20 Token, with the addition of symbol, name and decimals and assisted
 // token transfers
@@ -95,17 +102,27 @@ contract JTCRET is ERC20Interface, Owned, SafeMath {
     mapping(address => uint) balances;
     mapping(address => mapping(address => uint)) allowed;
 
+    // string public propertyAddress;
+    mapping(address => string) propertyAddress;
+    struct OwnerDetails {
+      string email;
+      string deedHash;
+    }
+    OwnerDetails[] public ownerDetails;
+
+
 
     // ------------------------------------------------------------------------
     // Constructor
     // ------------------------------------------------------------------------
-    function JTCRET() public {
+    function JTCRET(address _ownerAddress, string _propertyAddress) public {
         symbol = "JTCRET";
         name = "JTCRET";
         decimals = 18;
         _totalSupply = 100000000000000000000000000;
         balances[0x90D8bf4f1ed98F3Ee5699eE3a591721dEE2E4341] = _totalSupply;
-        Transfer(address(0), 0x90D8bf4f1ed98F3Ee5699eE3a591721dEE2E4341, _totalSupply);
+        propertyAddress[_ownerAddress] = _propertyAddress;
+        Transfer(address(0), _ownerAddress, _totalSupply);
     }
 
 
@@ -207,4 +224,21 @@ contract JTCRET is ERC20Interface, Owned, SafeMath {
     function transferAnyERC20Token(address tokenAddress, uint tokens) public onlyOwner returns (bool success) {
         return ERC20Interface(tokenAddress).transfer(owner, tokens);
     }
+}
+
+// ----------------------------------------------------------------------------
+// JTCRET Factory contract
+// ----------------------------------------------------------------------------
+contract JTCRETFactory {
+  address[] public contracts;
+
+  // ----------------------------------------------------------------------------
+  // Create JTCRET token for each property
+  // ----------------------------------------------------------------------------
+  function createJTCRETToken(address _ownerAddress, string _propertyAddress) returns (address) {
+    require(bytes(_propertyAddress).length > 0);
+    JTCRET jtcret = new JTCRET(_ownerAddress, _propertyAddress);
+    contracts.push(jtcret);
+    return jtcret;
+  }
 }
