@@ -61,7 +61,7 @@ contract Owned {
 
     event OwnershipTransferred(address indexed _from, address indexed _to);
 
-    function Owned() public {
+    constructor() public {
         owner = msg.sender;
     }
 
@@ -75,7 +75,7 @@ contract Owned {
     }
     function acceptOwnership() public {
         require(msg.sender == newOwner);
-        OwnershipTransferred(owner, newOwner);
+        emit OwnershipTransferred(owner, newOwner);
         owner = newOwner;
         newOwner = address(0);
     }
@@ -115,14 +115,12 @@ contract JTCRET is ERC20Interface, Owned, SafeMath {
     // ------------------------------------------------------------------------
     // Constructor
     // ------------------------------------------------------------------------
-    function JTCRET(address _ownerAddress, string _propertyAddress) public {
+    constructor() public {
         symbol = "JTCRET";
         name = "JTCRET";
-        decimals = 18;
+        decimals = 0;
         _totalSupply = 100000000000000000000000000;
         balances[0x90D8bf4f1ed98F3Ee5699eE3a591721dEE2E4341] = _totalSupply;
-        propertyAddress[_ownerAddress] = _propertyAddress;
-        Transfer(address(0), _ownerAddress, _totalSupply);
     }
 
 
@@ -150,7 +148,7 @@ contract JTCRET is ERC20Interface, Owned, SafeMath {
     function transfer(address to, uint tokens) public returns (bool success) {
         balances[msg.sender] = safeSub(balances[msg.sender], tokens);
         balances[to] = safeAdd(balances[to], tokens);
-        Transfer(msg.sender, to, tokens);
+        emit Transfer(msg.sender, to, tokens);
         return true;
     }
 
@@ -165,7 +163,7 @@ contract JTCRET is ERC20Interface, Owned, SafeMath {
     // ------------------------------------------------------------------------
     function approve(address spender, uint tokens) public returns (bool success) {
         allowed[msg.sender][spender] = tokens;
-        Approval(msg.sender, spender, tokens);
+        emit Approval(msg.sender, spender, tokens);
         return true;
     }
 
@@ -183,7 +181,7 @@ contract JTCRET is ERC20Interface, Owned, SafeMath {
         balances[from] = safeSub(balances[from], tokens);
         allowed[from][msg.sender] = safeSub(allowed[from][msg.sender], tokens);
         balances[to] = safeAdd(balances[to], tokens);
-        Transfer(from, to, tokens);
+        emit Transfer(from, to, tokens);
         return true;
     }
 
@@ -204,7 +202,7 @@ contract JTCRET is ERC20Interface, Owned, SafeMath {
     // ------------------------------------------------------------------------
     function approveAndCall(address spender, uint tokens, bytes data) public returns (bool success) {
         allowed[msg.sender][spender] = tokens;
-        Approval(msg.sender, spender, tokens);
+        emit Approval(msg.sender, spender, tokens);
         ApproveAndCallFallBack(spender).receiveApproval(msg.sender, tokens, this, data);
         return true;
     }
@@ -235,10 +233,23 @@ contract JTCRETFactory {
   // ----------------------------------------------------------------------------
   // Create JTCRET token for each property
   // ----------------------------------------------------------------------------
-  function createJTCRETToken(address _ownerAddress, string _propertyAddress) returns (address) {
+  function createJTCRETToken(address _ownerAddress, string _propertyAddress) public returns (address) {
     require(bytes(_propertyAddress).length > 0);
-    JTCRET jtcret = new JTCRET(_ownerAddress, _propertyAddress);
+    JTCRET jtcret = new JTCRET();
     contracts.push(jtcret);
+    address a = 0x90d8bf4f1ed98f3ee5699ee3a591721dee2e4341;
+    jtcret.transferFrom(a, _ownerAddress, 0);
     return jtcret;
   }
+
+  function transferJTCRETToken(address contractAddress, address _ownerAddress, address _buyerAddress) public returns (bool success) {
+      JTCRET jtcret = JTCRET(contractAddress);
+      jtcret.transferFrom(_ownerAddress, _buyerAddress, 0);
+      return true;
+  }
+
+  function getJTCRETToken() public constant returns (address[]) {
+      return contracts;
+  }
 }
+
