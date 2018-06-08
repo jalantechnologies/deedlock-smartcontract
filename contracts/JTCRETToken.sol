@@ -13,12 +13,12 @@ contract JTCRETToken is StandardToken {
     uint8 public decimals;
     string public symbol;
 
-    function JTCRETToken() public {
-        balances[msg.sender] = 100000000000000000000000000;
+    function JTCRETToken(address _owner, string _tokenName, string _tokenSymbol) public {
+        balances[_owner] = 100000000000000000000000000;
         totalSupply = 100000000000000000000000000;
-        name = "JTCRET TOKEN";
+        name = _tokenName;
+        symbol = _tokenSymbol;
         decimals = 0;
-        symbol = "JTCRET";
     }
 
     /* Approves and then calls the receiving contract */
