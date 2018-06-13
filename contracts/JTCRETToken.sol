@@ -1,5 +1,4 @@
 pragma solidity ^0.4.4;
-pragma experimental ABIEncoderV2;
 
 import "./StandardToken.sol";
 
@@ -19,15 +18,18 @@ contract JTCRETToken is StandardToken {
         string propertyAddress;
         address[] ownerDetails;
     }
-
     struct OwnerDetails {
-        string ownerName;
-        string ownerEmail;
-        string deedURL;
-        address propertyAddress;
+        bytes32 ownerName;
+        bytes32 ownerEmail;
+    }
+    struct DeedData {
+        uint propertyId;
+        bytes32 deedURL;
+        address ownerWalletAddress;
     }
     mapping (uint => Property) public property;
     mapping (address => OwnerDetails) public ownerDetails;
+    mapping (uint => DeedData[]) public deedData;
     uint totalProperties;
 
     function JTCRETToken(address _owner, string _tokenName, string _tokenSymbol) public {
@@ -50,11 +52,11 @@ contract JTCRETToken is StandardToken {
         return true;
     }
 
-    function createProperty(address _to, uint256 _value, string _propertyAddress, string _ownerName, string _ownerEmail, string _deedURL) public returns (bool success) {
+    function createProperty(address _to, uint256 _value, string _propertyAddress, bytes32 _ownerName, bytes32 _ownerEmail) public returns (bool success) {
         //Default assumes totalSupply can't be over max (2^256 - 1).
         //If your token leaves out totalSupply and can issue more tokens as time goes on, you need to check if it doesn't wrap.
         //Replace the if with this one instead.
-        if (balances[msg.sender] >= _value && _value > 0) {
+        if (balances[msg.sender] >= _value) {
             balances[msg.sender] -= _value;
             balances[_to] += _value;
             totalProperties++;
@@ -62,7 +64,8 @@ contract JTCRETToken is StandardToken {
             property[totalProperties].propertyAddress = _propertyAddress;
             ownerDetails[_to].ownerName = _ownerName;
             ownerDetails[_to].ownerEmail = _ownerEmail;
-            ownerDetails[_to].deedURL = _deedURL;
+            //DeedData memory deed = DeedData(totalProperties, _deedURL, _to);
+            //deedData[totalProperties].push(deed);
             property[totalProperties].ownerDetails.push(_to);
             emit Transfer(msg.sender, _to, _value);
             return true;
@@ -83,18 +86,21 @@ contract JTCRETToken is StandardToken {
 
     function getPropertyOwnerDetails(uint _propertyId) public constant returns (
         string _propertyAddress,
-        string[] _ownerName,
-        string[] _ownerEmail,
-        string[] _deedURL) {
+        bytes32[] _ownerName,
+        bytes32[] _ownerEmail,
+        bytes32[] _deedURL) {
         Property memory _property = property[_propertyId];
-        string[] memory ownersNames = new string[](_property.ownerDetails.length);
-        string[] memory ownersEmails = new string[](_property.ownerDetails.length);
-        string[] memory deedURLS = new string[](_property.ownerDetails.length);
+        bytes32[] memory ownersNames = new bytes32[](_property.ownerDetails.length);
+        bytes32[] memory ownersEmails = new bytes32[](_property.ownerDetails.length);
+        DeedData[] memory deeds = deedData[_propertyId];
+        bytes32[] memory deedURLS = new bytes32[](deeds.length);
         for (uint i = 0; i < _property.ownerDetails.length; i++) {
             OwnerDetails memory ownerDetail = ownerDetails[_property.ownerDetails[i]];
             ownersNames[i] = ownerDetail.ownerName;
             ownersEmails[i] = ownerDetail.ownerEmail;
-            deedURLS[i] = ownerDetail.deedURL;
+        }
+        for (uint j = 0; j < deeds.length; j++) {
+            deedURLS[j] = deeds[j].deedURL;
         }
         return (_property.propertyAddress, ownersNames, ownersEmails, deedURLS);
     }
