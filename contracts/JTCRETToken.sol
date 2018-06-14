@@ -9,9 +9,20 @@ contract JTCRETToken is StandardToken {
         revert();
     }
 
+    struct Owner {
+        string name;
+        string email;
+    }
+
+    struct PropertyTransferInfo {
+        Owner owner;
+        string deedURL;
+    }
+
     string public name;
     uint8 public decimals;
     string public symbol;
+    mapping(string => PropertyTransferInfo[]) propertyTranferDetails;
 
     function JTCRETToken(address _owner, string _tokenName, string _tokenSymbol) public {
         balances[_owner] = 100000000000000000000000000;
@@ -33,7 +44,7 @@ contract JTCRETToken is StandardToken {
         return true;
     }
 
-    function createProperty(address _to, uint256 _value, string _propertyAddress) public returns (bool success) {
+    function createProperty(address _to, uint256 _value, string _propertyAddress, string _ownerName, string _ownerEmailAddress) public returns (bool success) {
         //Default assumes totalSupply can't be over max (2^256 - 1).
         //If your token leaves out totalSupply and can issue more tokens as time goes on, you need to check if it doesn't wrap.
         //Replace the if with this one instead.
@@ -41,6 +52,7 @@ contract JTCRETToken is StandardToken {
             balances[msg.sender] -= _value;
             balances[_to] += _value;
             propertyAddress[_to] = _propertyAddress;
+            propertyTranferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress), ""));
             emit Transfer(msg.sender, _to, _value);
             return true;
         } else { return false; }
