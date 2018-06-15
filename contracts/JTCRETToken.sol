@@ -12,6 +12,7 @@ contract JTCRETToken is StandardToken {
     struct Owner {
         string name;
         string email;
+        address ownerWalletAddress;
     }
 
     struct PropertyTransferInfo {
@@ -22,7 +23,9 @@ contract JTCRETToken is StandardToken {
     string public name;
     uint8 public decimals;
     string public symbol;
-    mapping(string => PropertyTransferInfo[]) propertyTranferDetails;
+    mapping(string => PropertyTransferInfo[]) propertyTransferDetails;
+
+    event PropertyTokenCreated(address indexed _to, string propertyAddress);
 
     function JTCRETToken(address _owner, string _tokenName, string _tokenSymbol) public {
         balances[_owner] = 100000000000000000000000000;
@@ -52,9 +55,9 @@ contract JTCRETToken is StandardToken {
             balances[msg.sender] -= _value;
             balances[_to] += _value;
             propertyAddress[_to] = _propertyAddress;
-            propertyTranferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress), ""));
-            emit Transfer(msg.sender, _to, _value);
-            return true;
-        } else { return false; }
+            propertyTransferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress, _to), ""));
+            emit PropertyTokenCreated(_to, _propertyAddress);
+        return true;
+       } else { return false; }
     }
 }
