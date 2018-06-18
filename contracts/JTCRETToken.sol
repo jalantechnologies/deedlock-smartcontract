@@ -12,7 +12,7 @@ contract JTCRETToken is StandardToken {
     struct Owner {
         string name;
         string email;
-        address ownerWalletAddress;
+        address walletAddress;
     }
 
     struct PropertyTransferInfo {
@@ -59,5 +59,11 @@ contract JTCRETToken is StandardToken {
             emit PropertyTokenCreated(_to, _propertyAddress);
         return true;
        } else { return false; }
+    }
+
+    function getPropertyCurrentOwnerDetails(string _propertyAddress) constant returns (string ownerName, string ownerEmail, address walletAddress) {
+        require(propertyTransferDetails[_propertyAddress].length > 0);
+        uint lastIndex = propertyTransferDetails[_propertyAddress].length - 1;
+        return (propertyTransferDetails[_propertyAddress][lastIndex].owner.name, propertyTransferDetails[_propertyAddress][lastIndex].owner.email, propertyTransferDetails[_propertyAddress][lastIndex].owner.walletAddress);
     }
 }
