@@ -61,9 +61,12 @@ contract JTCRETToken is StandardToken {
        } else { return false; }
     }
 
-    function getPropertyCurrentOwnerDetails(string _propertyAddress) constant returns (string ownerName, string ownerEmail, address walletAddress) {
-        require(propertyTransferDetails[_propertyAddress].length > 0);
-        uint lastIndex = propertyTransferDetails[_propertyAddress].length - 1;
-        return (propertyTransferDetails[_propertyAddress][lastIndex].owner.name, propertyTransferDetails[_propertyAddress][lastIndex].owner.email, propertyTransferDetails[_propertyAddress][lastIndex].owner.walletAddress);
+    function getPropertyOwnerDetails(string _propertyAddress, uint index) constant returns (string ownerName, string ownerEmail, address ownerWalletAddress, string deedURL) {
+        uint length = propertyTransferDetails[_propertyAddress].length;
+        require(length > 0);
+        require(length >= index);
+        uint requestedIndex = length - index;
+        return (propertyTransferDetails[_propertyAddress][requestedIndex].owner.name, propertyTransferDetails[_propertyAddress][requestedIndex].owner.email,
+          propertyTransferDetails[_propertyAddress][requestedIndex].owner.walletAddress, propertyTransferDetails[_propertyAddress][requestedIndex].deedURL);
     }
 }
