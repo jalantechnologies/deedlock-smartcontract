@@ -26,6 +26,7 @@ contract JTCRETToken is StandardToken {
     mapping(string => PropertyTransferInfo[]) propertyTransferDetails;
 
     event PropertyTokenCreated(address indexed _to, string propertyAddress);
+    event PropertyTokenTransferred(address indexed _to, string propertyAddress);
 
     function JTCRETToken(address _owner, string _tokenName, string _tokenSymbol) public {
         balances[_owner] = 100000000000000000000000000;
@@ -65,5 +66,20 @@ contract JTCRETToken is StandardToken {
         require(propertyTransferDetails[_propertyAddress].length > 0);
         uint lastIndex = propertyTransferDetails[_propertyAddress].length - 1;
         return (propertyTransferDetails[_propertyAddress][lastIndex].owner.name, propertyTransferDetails[_propertyAddress][lastIndex].owner.email, propertyTransferDetails[_propertyAddress][lastIndex].owner.walletAddress);
+    }
+
+    function transferProperty(address _to, uint256 _value, string _propertyAddress, string _ownerName, string _ownerEmailAddress, string _deedURL) public returns (bool success) {
+        if (balances[msg.sender] >= _value && _value > 0) {
+            require(propertyTransferDetails[_propertyAddress].length > 0);
+            uint currentOwnerIndex = propertyTransferDetails[_propertyAddress].length - 1;
+            require(propertyTransferDetails[_propertyAddress][currentOwnerIndex].owner.walletAddress == msg.sender);
+            require(bytes(_deedURL).length > 0);
+            balances[msg.sender] -= _value;
+            balances[_to] += _value;
+            propertyAddress[_to] = _propertyAddress;
+            propertyTransferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress, _to), _deedURL));
+            emit PropertyTokenTransferred(_to, _propertyAddress);
+        return true;
+       } else { return false; }
     }
 }
