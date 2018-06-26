@@ -62,10 +62,21 @@ contract JTCRETToken is StandardToken {
        } else { return false; }
     }
 
-    function getPropertyCurrentOwnerDetails(string _propertyAddress) constant returns (string ownerName, string ownerEmail, address walletAddress) {
-        require(propertyTransferDetails[_propertyAddress].length > 0);
-        uint lastIndex = propertyTransferDetails[_propertyAddress].length - 1;
-        return (propertyTransferDetails[_propertyAddress][lastIndex].owner.name, propertyTransferDetails[_propertyAddress][lastIndex].owner.email, propertyTransferDetails[_propertyAddress][lastIndex].owner.walletAddress);
+    function getPropertyOwnerDetails(string _propertyAddress, uint index) constant returns (string ownerName, string ownerEmail, address ownerWalletAddress, string deedURL, bool _previousIndexExist, bool _nextIndexExist) {
+        uint length = propertyTransferDetails[_propertyAddress].length;
+        require(length > 0);
+        require(length >= index);
+        uint requestedIndex = length - index;
+        bool previousIndexExist = false;
+        bool nextIndexExist = false;
+        if (length >= (index + 1) && (index + 1) > 0) {
+            previousIndexExist = true;
+        }
+        if (length >= (index - 1) && (index - 1) > 0) {
+            nextIndexExist = true;
+        }
+        return (propertyTransferDetails[_propertyAddress][requestedIndex].owner.name, propertyTransferDetails[_propertyAddress][requestedIndex].owner.email,
+          propertyTransferDetails[_propertyAddress][requestedIndex].owner.walletAddress, propertyTransferDetails[_propertyAddress][requestedIndex].deedURL, previousIndexExist, nextIndexExist);
     }
 
     function transferProperty(address _to, uint256 _value, string _propertyAddress, string _ownerName, string _ownerEmailAddress, string _deedURL) public returns (bool success) {
