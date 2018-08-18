@@ -1,4 +1,4 @@
-pragma solidity ^0.4.4;
+pragma solidity ^0.4.24;
 
 import "./ERC721Token.sol";
 
@@ -25,41 +25,20 @@ contract JTCRETToken is ERC721Token {
     string public symbol;
     mapping(string => PropertyTransferInfo[]) propertyTransferDetails;
 
-    event PropertyTokenCreated(address indexed _to, string propertyAddress);
-    event PropertyTokenTransferred(address indexed _to, string propertyAddress);
+    event PropertyTokenCreated(address indexed _to, string propertyAddress, uint tokenId);
+    event PropertyTokenTransferred(address indexed _to, string propertyAddress, uint tokenId);
 
-    function JTCRETToken(address _owner, string _tokenName, string _tokenSymbol) public {
-        balanceOf[_owner] = 100000000000000000000000000;
-        totalSupply = 100000000000000000000000000;
-        name = _tokenName;
-        symbol = _tokenSymbol;
-        decimals = 0;
+    constructor (address _owner, string _tokenName, string _tokenSymbol) public ERC721Token(_tokenName, _tokenSymbol) {
     }
 
-    /* Approves and then calls the receiving contract */
-    function approveAndCall(address _spender, uint256 _value, bytes _extraData) public returns (bool success) {
-        allowed[msg.sender][_spender] = _value;
-        emit Approval(msg.sender, _spender, _value);
-
-        //call the receiveApproval function on the contract you want to be notified. This crafts the function signature manually so one doesn't have to include a contract in here just for this.
-        //receiveApproval(address _from, uint256 _value, address _tokenContract, bytes _extraData)
-        //it is assumed that when does this that the call *should* succeed, otherwise one would use vanilla approve instead.
-        if(!_spender.call(bytes4(bytes32(keccak256("receiveApproval(address,uint256,address,bytes)"))), msg.sender, _value, this, _extraData)) { revert(); }
+    function createProperty(address _to, string _propertyAddress, string _ownerName, string _ownerEmailAddress, uint _tokenId) public returns (bool success) {
+        super._mint(_to, _tokenId);
+        super._setTokenURI(_tokenId, _propertyAddress);
+        allTokensIndex[_tokenId] = allTokens.length;
+        allTokens.push(_tokenId);
+        propertyTransferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress, _to), ""));
+        emit PropertyTokenCreated(_to, _propertyAddress, _tokenId);
         return true;
-    }
-
-    function createProperty(address _to, uint256 _value, string _propertyAddress, string _ownerName, string _ownerEmailAddress) public returns (bool success) {
-        //Default assumes totalSupply can't be over max (2^256 - 1).
-        //If your token leaves out totalSupply and can issue more tokens as time goes on, you need to check if it doesn't wrap.
-        //Replace the if with this one instead.
-        if (balanceOf[msg.sender] >= _value && _value > 0) {
-            balanceOf[msg.sender] -= _value;
-            balanceOf[_to] += _value;
-            propertyAddress[_to] = _propertyAddress;
-            propertyTransferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress, _to), ""));
-            emit PropertyTokenCreated(_to, _propertyAddress);
-        return true;
-       } else { return false; }
     }
 
     function getPropertyOwnerDetails(string _propertyAddress, uint index) constant returns (string ownerName, string ownerEmail, address ownerWalletAddress, string deedURL, bool _previousIndexExist, bool _nextIndexExist) {
@@ -79,18 +58,14 @@ contract JTCRETToken is ERC721Token {
           propertyTransferDetails[_propertyAddress][requestedIndex].owner.walletAddress, propertyTransferDetails[_propertyAddress][requestedIndex].deedURL, previousIndexExist, nextIndexExist);
     }
 
-    function transferProperty(address _to, uint256 _value, string _propertyAddress, string _ownerName, string _ownerEmailAddress, string _deedURL) public returns (bool success) {
-        if (balanceOf[msg.sender] >= _value && _value > 0) {
-            require(propertyTransferDetails[_propertyAddress].length > 0);
-            uint currentOwnerIndex = propertyTransferDetails[_propertyAddress].length - 1;
-            require(propertyTransferDetails[_propertyAddress][currentOwnerIndex].owner.walletAddress == msg.sender);
-            require(bytes(_deedURL).length > 0);
-            balanceOf[msg.sender] -= _value;
-            balanceOf[_to] += _value;
-            propertyAddress[_to] = _propertyAddress;
-            propertyTransferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress, _to), _deedURL));
-            emit PropertyTokenTransferred(_to, _propertyAddress);
+    function transferProperty(address _to, string _propertyAddress, string _ownerName, string _ownerEmailAddress, string _deedURL, uint _tokenId) public returns (bool success) {
+        require(propertyTransferDetails[_propertyAddress].length > 0);
+        uint currentOwnerIndex = propertyTransferDetails[_propertyAddress].length - 1;
+        require(propertyTransferDetails[_propertyAddress][currentOwnerIndex].owner.walletAddress == msg.sender);
+        require(bytes(_deedURL).length > 0);
+        super._mint(_to, _tokenId);
+        propertyTransferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress, _to), _deedURL));
+        emit PropertyTokenTransferred(_to, _propertyAddress, _tokenId);
         return true;
-       } else { return false; }
     }
 }
