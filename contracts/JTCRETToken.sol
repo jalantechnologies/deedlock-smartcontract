@@ -32,8 +32,9 @@ contract JTCRETToken is ERC721Token {
     constructor (address _owner, string _tokenName, string _tokenSymbol) public ERC721Token(_tokenName, _tokenSymbol) {
     }
 
-    function createProperty(address _to, string _propertyAddress, string _ownerName, string _ownerEmailAddress, uint _tokenId) public returns (bool success) {
+    function createProperty(address _to, string _propertyAddress, string _ownerName, string _ownerEmailAddress) public returns (bool success) {
         require(allTokens.length < propertyTokenCreationLimit);
+        uint _tokenId = allTokens.length + 1;
         super._mint(_to, _tokenId);
         super._setTokenURI(_tokenId, _propertyAddress);
         allTokensIndex[_tokenId] = allTokens.length;
@@ -64,13 +65,19 @@ contract JTCRETToken is ERC721Token {
         require(_to != address(0));
         require(propertyTransferDetails[_propertyAddress].length > 0);
         address _from = propertyTransferDetails[_propertyAddress][currentOwnerIndex].owner.walletAddress;
-        require(_to != _from);
         uint currentOwnerIndex = propertyTransferDetails[_propertyAddress].length - 1;
-        require(_from == msg.sender);
         require(bytes(_deedURL).length > 0);
-        super.transferFrom(_from, _to, _tokenId);
-        propertyTransferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress, _to), _deedURL));
-        emit PropertyTokenTransferred(_to, _propertyAddress, _tokenId);
-        return true;
+
+        address owner = ownerOf(_tokenId);
+        require(_to != owner);
+        require(_from == owner || isApprovedForAll(owner, _from));
+
+        if (getApproved(_tokenId) != address(0) || _to != address(0)) {
+            tokenApprovals[_tokenId] = _to;
+            propertyTransferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress, _to), _deedURL));
+            emit PropertyTokenTransferred(_to, _propertyAddress, _tokenId);
+            return true;
+        } else {
+        return false;
     }
 }
