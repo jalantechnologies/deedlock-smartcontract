@@ -24,6 +24,7 @@ contract JTCRETToken is ERC721Token {
     uint8 public decimals;
     string public symbol;
     mapping(string => PropertyTransferInfo[]) propertyTransferDetails;
+    uint256 public propertyTokenCreationLimit = 100000000000000000000000000;
 
     event PropertyTokenCreated(address indexed _to, string propertyAddress, uint tokenId);
     event PropertyTokenTransferred(address indexed _to, string propertyAddress, uint tokenId);
@@ -32,6 +33,7 @@ contract JTCRETToken is ERC721Token {
     }
 
     function createProperty(address _to, string _propertyAddress, string _ownerName, string _ownerEmailAddress, uint _tokenId) public returns (bool success) {
+        require(allTokens.length < propertyTokenCreationLimit);
         super._mint(_to, _tokenId);
         super._setTokenURI(_tokenId, _propertyAddress);
         allTokensIndex[_tokenId] = allTokens.length;
@@ -59,11 +61,14 @@ contract JTCRETToken is ERC721Token {
     }
 
     function transferProperty(address _to, string _propertyAddress, string _ownerName, string _ownerEmailAddress, string _deedURL, uint _tokenId) public returns (bool success) {
+        require(_to != address(0));
         require(propertyTransferDetails[_propertyAddress].length > 0);
+        address _from = propertyTransferDetails[_propertyAddress][currentOwnerIndex].owner.walletAddress;
+        require(_to != _from);
         uint currentOwnerIndex = propertyTransferDetails[_propertyAddress].length - 1;
-        require(propertyTransferDetails[_propertyAddress][currentOwnerIndex].owner.walletAddress == msg.sender);
+        require(_from == msg.sender);
         require(bytes(_deedURL).length > 0);
-        super._mint(_to, _tokenId);
+        super.transferFrom(_from, _to, _tokenId);
         propertyTransferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress, _to), _deedURL));
         emit PropertyTokenTransferred(_to, _propertyAddress, _tokenId);
         return true;
