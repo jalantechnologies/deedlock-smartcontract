@@ -34,7 +34,7 @@ contract JTCRETToken is ERC721Token {
 
     function createProperty(address _to, string _propertyAddress, string _ownerName, string _ownerEmailAddress) public returns (bool success) {
         require(allTokens.length < propertyTokenCreationLimit);
-        uint _tokenId = allTokens.length + 1;
+        uint256 _tokenId = allTokens.length + 1;
         super._mint(_to, _tokenId);
         super._setTokenURI(_tokenId, _propertyAddress);
         allTokensIndex[_tokenId] = allTokens.length;
@@ -44,11 +44,11 @@ contract JTCRETToken is ERC721Token {
         return true;
     }
 
-    function getPropertyOwnerDetails(string _propertyAddress, uint index) constant returns (string ownerName, string ownerEmail, address ownerWalletAddress, string deedURL, bool _previousIndexExist, bool _nextIndexExist) {
-        uint length = propertyTransferDetails[_propertyAddress].length;
+    function getPropertyOwnerDetails(string _propertyAddress, uint index, uint tokenIndex) constant returns (string ownerName, string ownerEmail, address ownerWalletAddress, string deedURL, bool _previousIndexExist, bool _nextIndexExist) {
+        uint256 length = propertyTransferDetails[_propertyAddress].length;
         require(length > 0);
         require(length >= index);
-        uint requestedIndex = length - index;
+        require(keccak256(tokenURIs[tokenIndex]) == keccak256(_propertyAddress));
         bool previousIndexExist = false;
         bool nextIndexExist = false;
         if (length >= (index + 1) && (index + 1) > 0) {
@@ -57,8 +57,11 @@ contract JTCRETToken is ERC721Token {
         if (length >= (index - 1) && (index - 1) > 0) {
             nextIndexExist = true;
         }
-        return (propertyTransferDetails[_propertyAddress][requestedIndex].owner.name, propertyTransferDetails[_propertyAddress][requestedIndex].owner.email,
-          propertyTransferDetails[_propertyAddress][requestedIndex].owner.walletAddress, propertyTransferDetails[_propertyAddress][requestedIndex].deedURL, previousIndexExist, nextIndexExist);
+        return (propertyTransferDetails[_propertyAddress][length - index].owner.name,
+        propertyTransferDetails[_propertyAddress][length - index].owner.email,
+        propertyTransferDetails[_propertyAddress][length - index].owner.walletAddress,
+        propertyTransferDetails[_propertyAddress][length - index].deedURL, previousIndexExist,
+        nextIndexExist);
     }
 
     function transferProperty(address _to, string _propertyAddress, string _ownerName, string _ownerEmailAddress, string _deedURL, uint _tokenId) public returns (bool success) {
@@ -75,6 +78,8 @@ contract JTCRETToken is ERC721Token {
         if (getApproved(_tokenId) != address(0) || _to != address(0)) {
             tokenApprovals[_tokenId] = _to;
             propertyTransferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress, _to), _deedURL));
+            removeTokenFrom(_from, _tokenId);
+            addTokenTo(_to, _tokenId);
             emit PropertyTokenTransferred(_to, _propertyAddress, _tokenId);
             return true;
         } else {
