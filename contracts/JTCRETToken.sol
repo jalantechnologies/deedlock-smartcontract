@@ -44,11 +44,19 @@ contract JTCRETToken is ERC721Token {
         return true;
     }
 
-    function getPropertyOwnerDetails(string _propertyAddress, uint index, uint tokenIndex) constant returns (string ownerName, string ownerEmail, address ownerWalletAddress, string deedURL, bool _previousIndexExist, bool _nextIndexExist) {
+    function getPropertyOwnerDetails(string _propertyAddress, uint index, uint tokenIndex) constant returns (string ownerName, string ownerEmail, address ownerWalletAddress, string deedURL, uint _tokenId) {
         uint256 length = propertyTransferDetails[_propertyAddress].length;
         require(length > 0);
         require(length >= index);
         require(keccak256(tokenURIs[tokenIndex]) == keccak256(_propertyAddress));
+        return (propertyTransferDetails[_propertyAddress][length - index].owner.name,
+        propertyTransferDetails[_propertyAddress][length - index].owner.email,
+        propertyTransferDetails[_propertyAddress][length - index].owner.walletAddress,
+        propertyTransferDetails[_propertyAddress][length - index].deedURL, tokenIndex);
+    }
+
+    function checkPreviousNextIndexExist(string _propertyAddress, uint index) constant returns (bool _previousIndexExist, bool _nextIndexExist) {
+        uint256 length = propertyTransferDetails[_propertyAddress].length;
         bool previousIndexExist = false;
         bool nextIndexExist = false;
         if (length >= (index + 1) && (index + 1) > 0) {
@@ -57,11 +65,7 @@ contract JTCRETToken is ERC721Token {
         if (length >= (index - 1) && (index - 1) > 0) {
             nextIndexExist = true;
         }
-        return (propertyTransferDetails[_propertyAddress][length - index].owner.name,
-        propertyTransferDetails[_propertyAddress][length - index].owner.email,
-        propertyTransferDetails[_propertyAddress][length - index].owner.walletAddress,
-        propertyTransferDetails[_propertyAddress][length - index].deedURL, previousIndexExist,
-        nextIndexExist);
+        return (previousIndexExist, nextIndexExist);
     }
 
     function transferProperty(address _to, string _propertyAddress, string _ownerName, string _ownerEmailAddress, string _deedURL, uint _tokenId) public returns (bool success) {
