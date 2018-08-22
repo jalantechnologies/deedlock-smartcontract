@@ -18,6 +18,7 @@ contract JTCRETToken is ERC721Token {
     struct PropertyTransferInfo {
         Owner owner;
         string deedURL;
+        uint256 tokenId;
     }
 
     string public name;
@@ -26,8 +27,8 @@ contract JTCRETToken is ERC721Token {
     mapping(string => PropertyTransferInfo[]) propertyTransferDetails;
     uint256 public propertyTokenCreationLimit = 100000000000000000000000000;
 
-    event PropertyTokenCreated(address indexed _to, string propertyAddress, uint tokenId);
-    event PropertyTokenTransferred(address indexed _to, string propertyAddress, uint tokenId);
+    event PropertyTokenCreated(address indexed _to, string propertyAddress);
+    event PropertyTokenTransferred(address indexed _to, string propertyAddress);
 
     constructor (address _owner, string _tokenName, string _tokenSymbol) public ERC721Token(_tokenName, _tokenSymbol) {
     }
@@ -39,20 +40,21 @@ contract JTCRETToken is ERC721Token {
         super._setTokenURI(_tokenId, _propertyAddress);
         allTokensIndex[_tokenId] = allTokens.length;
         allTokens.push(_tokenId);
-        propertyTransferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress, _to), ""));
-        emit PropertyTokenCreated(_to, _propertyAddress, _tokenId);
+        propertyTransferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress, _to), "", _tokenId));
+        emit PropertyTokenCreated(_to, _propertyAddress);
         return true;
     }
 
-    function getPropertyOwnerDetails(string _propertyAddress, uint index, uint tokenIndex) constant returns (string ownerName, string ownerEmail, address ownerWalletAddress, string deedURL, uint _tokenId) {
+    function getPropertyOwnerDetails(string _propertyAddress, uint index) constant returns (string ownerName, string ownerEmail, address ownerWalletAddress, string deedURL) {
         uint256 length = propertyTransferDetails[_propertyAddress].length;
         require(length > 0);
         require(length >= index);
+        uint256 tokenIndex = propertyTransferDetails[_propertyAddress][length - index].tokenId;
         require(keccak256(tokenURIs[tokenIndex]) == keccak256(_propertyAddress));
         return (propertyTransferDetails[_propertyAddress][length - index].owner.name,
         propertyTransferDetails[_propertyAddress][length - index].owner.email,
         propertyTransferDetails[_propertyAddress][length - index].owner.walletAddress,
-        propertyTransferDetails[_propertyAddress][length - index].deedURL, tokenIndex);
+        propertyTransferDetails[_propertyAddress][length - index].deedURL);
     }
 
     function checkPreviousNextIndexExist(string _propertyAddress, uint index) constant returns (bool _previousIndexExist, bool _nextIndexExist) {
@@ -68,12 +70,13 @@ contract JTCRETToken is ERC721Token {
         return (previousIndexExist, nextIndexExist);
     }
 
-    function transferProperty(address _to, string _propertyAddress, string _ownerName, string _ownerEmailAddress, string _deedURL, uint _tokenId) public returns (bool success) {
+    function transferProperty(address _to, string _propertyAddress, string _ownerName, string _ownerEmailAddress, string _deedURL) public returns (bool success) {
         require(_to != address(0));
         require(propertyTransferDetails[_propertyAddress].length > 0);
         address _from = propertyTransferDetails[_propertyAddress][currentOwnerIndex].owner.walletAddress;
         uint currentOwnerIndex = propertyTransferDetails[_propertyAddress].length - 1;
         require(bytes(_deedURL).length > 0);
+        uint256 _tokenId = propertyTransferDetails[_propertyAddress][0].tokenId;
 
         address owner = ownerOf(_tokenId);
         require(_to != owner);
@@ -81,10 +84,10 @@ contract JTCRETToken is ERC721Token {
 
         if (getApproved(_tokenId) != address(0) || _to != address(0)) {
             tokenApprovals[_tokenId] = _to;
-            propertyTransferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress, _to), _deedURL));
+            propertyTransferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress, _to), _deedURL, _tokenId));
             removeTokenFrom(_from, _tokenId);
             addTokenTo(_to, _tokenId);
-            emit PropertyTokenTransferred(_to, _propertyAddress, _tokenId);
+            emit PropertyTokenTransferred(_to, _propertyAddress);
             return true;
         } else {
         return false;
