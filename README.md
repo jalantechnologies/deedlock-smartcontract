@@ -25,7 +25,7 @@ truffle migrate
 ### Token: PRT (Property Token)
 ### Contract address: 0xDD56c06c952D20fe8df2536EAc80773B5a7579C5
 
-###ABI JSON Code:
+### ABI JSON Code:
 
 ```[
      {
@@ -606,40 +606,63 @@ truffle migrate
 ```
 
 ### 1. Creating a property token using Web3.
+
 Function name: createProperty
+
 Input fields to create a property:
-    Owner wallet address
-    Property address
-    Owner name
-    owner email address
+
+     Owner wallet address
+     Property address
+     Owner name
+     Owner email address
+     
 Response:
-    success (boolean field): true if token created successfully, else it return false
+
+     success (boolean field): true if token created successfully, else it return false
+     
 Event emitted:
-    PropertyTokenCreated: Once the property token is successfully created and added to owner's wallet address, then PropertyTokenCreated event is emitted.
+
+    PropertyTokenCreated: Once the property token is successfully created and added to owner's wallet address,
+    then PropertyTokenCreated event is emitted.
+    
     Data returned:
+    
         _to: Property owner's wallet address
         propertyAddress
 
 ### 2. Getting property details using property address using Web3.
+
 Function name: getPropertyOwnerDetails
+
 Input fields:
-    Property address
-    Index (You need to pass 1 as default value)
+
+     Property address
+     Index (You need to pass 1 as default value)
+     
 Output fields:
-    Owner name
-    Owner email
-    Owner wallet address
-    Deed URL
+     Owner name
+     Owner email
+     Owner wallet address
+     Deed URL
 
 ### 3. Get full title history associated with property using the address.
+
 Function name: getPropertyOwnerDetails
+
 Input fields:
-    Property address
-    Index (To show current owner of property, index = 1)
+
+     Property address
+     Index (To show current owner of property, index = 1)
+     
 Output fields:
-    Owner name
-    Owner email
-    Owner wallet address
-    Deed URL
-    Previous index exist (It is the boolean value, which is set to true in the case there is some previous owner exists. If previous index exist then the value of index will become index-1 and call the same function to get previous owner's details.)
-    Next index exist (It is the boolean value, which is set to true in the case there is some next owner exists. If next index exist then the value of index will become index+1 and call the same function to get next owner's details.)
+
+     Owner name
+     Owner email
+     Owner wallet address
+     Deed URL
+     Previous index exist (It is the boolean value, which is set to true in the case there is some
+     previous owner exists. If previous index exist then the value of index will become index-1 and
+     call the same function to get previous owner's details.)
+     Next index exist (It is the boolean value, which is set to true in the case there is some
+     next owner exists. If next index exist then the value of index will become index+1 and call
+     the same function to get next owner's details.)
