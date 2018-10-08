@@ -38,8 +38,6 @@ contract JTCRETToken is ERC721Token {
         super._mint(_to, _tokenId);
         // setTokenURI function is used to set a token's URI data
         super._setTokenURI(_tokenId, _propertyAddress);
-        allTokensIndex[_tokenId] = allTokens.length;
-        allTokens.push(_tokenId);
         // storing property owner details in token's metadata
         propertyTransferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress, _to), "", _tokenId));
         // emiting PropertyTokenCreated event once a token is created and transfered to owner's account
@@ -92,5 +90,21 @@ contract JTCRETToken is ERC721Token {
         // Once the property is transfered to new owner's account PropertyTokenTransferred event is emitted
         emit PropertyTokenTransferred(_to, _propertyAddress);
         return true;
+    }
+
+    function getRecentlyCreatedPropertyAddress() public constant returns (uint, string, string, string) {
+        string memory propertyAddress1 = '';
+        string memory propertyAddress2 = '';
+        string memory propertyAddress3 = '';
+        if (allTokens.length >= 1) {
+            propertyAddress1 = tokenURIs[allTokens.length];
+            if (allTokens.length >= 2) {
+                propertyAddress2 = tokenURIs[allTokens.length - 1];
+                if (allTokens.length >= 3) {
+                    propertyAddress3 = tokenURIs[allTokens.length - 2];
+                }
+            }
+        }
+        return (allTokens.length, propertyAddress1, propertyAddress2, propertyAddress3);
     }
 }
