@@ -39,10 +39,14 @@ contract JTCRETToken is ERC721Token {
         // setTokenURI function is used to set a token's URI data
         super._setTokenURI(_tokenId, _propertyAddress);
         // storing property owner details in token's metadata
-        propertyTransferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress, _to), "", _tokenId));
-        // emiting PropertyTokenCreated event once a token is created and transfered to owner's account
-        emit PropertyTokenCreated(_to, _propertyAddress);
-        return true;
+        if (propertyTransferDetails[_propertyAddress].length > 0) {
+            return false;
+        } else {
+            propertyTransferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress, _to), "", _tokenId));
+            // emiting PropertyTokenCreated event once a token is created and transfered to owner's account
+            emit PropertyTokenCreated(_to, _propertyAddress);
+            return true;
+        }
     }
 
     function getPropertyOwnerDetails(string _propertyAddress, uint index) public constant returns (string ownerName, string ownerEmail, address ownerWalletAddress, string deedURL, bool _previousIndexExist, bool _nextIndexExist) {
@@ -92,7 +96,7 @@ contract JTCRETToken is ERC721Token {
         return true;
     }
 
-    function getRecentlyCreatedPropertyAddress() public constant returns (uint, string, string, string) {
+    function getRecentlyCreatedPropertyAddress() public constant returns (string, string, string) {
         string memory propertyAddress1 = '';
         string memory propertyAddress2 = '';
         string memory propertyAddress3 = '';
@@ -105,6 +109,6 @@ contract JTCRETToken is ERC721Token {
                 }
             }
         }
-        return (allTokens.length, propertyAddress1, propertyAddress2, propertyAddress3);
+        return (propertyAddress1, propertyAddress2, propertyAddress3);
     }
 }
