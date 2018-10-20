@@ -25,7 +25,7 @@ contract JTCRETToken is ERC721Token {
     string public symbol;
     mapping(string => PropertyTransferInfo[]) propertyTransferDetails;
 
-    event PropertyTokenCreated(address indexed _to, string propertyAddress);
+    event PropertyTokenCreated(address indexed _to, string propertyAddress, bool success);
     event PropertyTokenTransferred(address indexed _to, string propertyAddress);
 
     constructor (address _owner, string _tokenName, string _tokenSymbol) public ERC721Token(_tokenName, _tokenSymbol) {
@@ -40,11 +40,12 @@ contract JTCRETToken is ERC721Token {
         super._setTokenURI(_tokenId, _propertyAddress);
         // storing property owner details in token's metadata
         if (propertyTransferDetails[_propertyAddress].length > 0) {
+            emit PropertyTokenCreated(_to, _propertyAddress, false);
             return false;
         } else {
             propertyTransferDetails[_propertyAddress].push(PropertyTransferInfo(Owner(_ownerName, _ownerEmailAddress, _to), "", _tokenId));
             // emiting PropertyTokenCreated event once a token is created and transfered to owner's account
-            emit PropertyTokenCreated(_to, _propertyAddress);
+            emit PropertyTokenCreated(_to, _propertyAddress, true);
             return true;
         }
     }
