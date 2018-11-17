@@ -23,7 +23,7 @@ truffle migrate
 ```
 
 ### Token: PRT (Property Token)
-### Contract address: 0xDD56c06c952D20fe8df2536EAc80773B5a7579C5
+### Contract address: 0xb869e7f000fdefaa407fdf61f113bee12520b392
 
 ### ABI JSON Code:
 
